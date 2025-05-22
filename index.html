@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Secure Cloud Storage</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        function confirmDelete(filename) {
+            return confirm(`Are you sure you want to delete "${filename}"?`);
+        }
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.textContent = message;
+            toast.style.display = "block";
+            setTimeout(() => toast.style.display = "none", 3000);
+        }
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+    </script>
+</head>
+<body>
+    <button id="darkModeToggle" onclick="toggleDarkMode()"> Toggle Dark Mode</button>
+    <a href="{{ url_for('logout') }}" style="position: absolute; top: 20px; left: 20px; color: white;">🚪 Logout</a>
+    
+    <h1> Encrypted Cloud Storage</h1>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="flash-message">
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+
+    <form method="POST" enctype="multipart/form-data" onsubmit="showToast('✅ File uploaded!')">
+        <input type="file" name="file" required>
+        <button type="submit">Upload & Encrypt</button>
+    </form>
+
+    <div class="summary">
+        <p><strong>Total Files:</strong> {{ summary.total_files }}</p>
+        <p><strong>Total Storage:</strong> {{ summary.total_size }} KB</p>
+        <p><strong>Last Uploaded:</strong> {{ summary.last_file }}</p>
+    </div>
+
+    <h2>📁 Encrypted Files:</h2>
+    <ul>
+        {% for file in files %}
+        <li>
+            <div class="file-info">
+                <span>
+                    {% if file.endswith('.txt.enc') %}📄{% elif file.endswith('.jpg.enc') or file.endswith('.png.enc') %}🖼{% elif file.endswith('.zip.enc') %}📦{% else %}📁{% endif %}
+                    {{ file }} ({{ file_sizes[file] }} KB)
+                </span>
+                <span class="file-actions">
+                    <a href="{{ url_for('download', filename=file) }}">Download</a>
+                    <a href="{{ url_for('preview', filename=file) }}">Preview</a>
+                    <a href="{{ url_for('delete_file', filename=file) }}" onclick="return confirmDelete('{{ file }}')">Delete</a>
+                </span>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <div id="toast" class="toast"></div>
+</body>
+</html>
